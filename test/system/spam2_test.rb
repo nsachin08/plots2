@@ -1,7 +1,7 @@
 require "application_system_test_case"
 
 class SpamTest < ApplicationSystemTestCase
-    
+
   def setup
     visit "/"
     click_on "Login"
@@ -16,39 +16,41 @@ class SpamTest < ApplicationSystemTestCase
     accept_confirm "Are you sure you want to delete #{spam_page.path}?" do
     find("a[href='/notes/delete/#{spam_page.id}'").click()
     end
-    assert_selector('div.alert', text: 'Node Deleted')
+    assert_selector('div.alert', text: 'Content Deleted')
   end
 
   test "publish node in spam2" do
     publish_page = nodes(:first_timer_note)
     visit "/spam2"
     find("a[href='/moderate/publish/#{publish_page.id}'").click()    
-    page.assert_selector("div.alert", text: "Content published.")
+    page.assert_selector("div.alert", text: "Content published")
   end
 
   test "spam post in spam2" do
     spam_page = nodes(:first_timer_note)
     visit "/spam2"
     find("a[href='/moderate/spam/#{spam_page.id}'").click()    
-    page.assert_selector("div.alert", text: "Content spammed.")
+    page.assert_selector("div.alert", text: "Content spammed")
   end
 
-  test "ban and unban authors in spam2" do
+  test "unflag post in spam2" do
+    flag_page = nodes(:about)
+    visit "/spam2/flags"
+      find("a[href='/moderate/remove_flag_node/#{flag_page.id}'").click() 
+    page.assert_selector("div.alert", text: "Content unflagged")
+  end
+
+  test "banning of a user in spam2" do
     ban_page = nodes(:first_timer_note)
-    visit "/spam2"    
+    visit "/spam2"
     within "#n#{ban_page.id}" do
       find("a[href='/ban/#{ban_page.author.id}'").click()
     end
+    visit "/"
     visit "/profile/#{ban_page.author.username}"
+    assert find("div.alert", text: "That user has been banned.")
     find("a#info-ellipsis").click()
     page.assert_selector "a[href='/unban/#{ban_page.author.id}'"
-    visit "/spam2"
-    within "#n#{ban_page.id}" do
-      find("a[href='/unban/#{ban_page.author.id}'").click()
-    end
-    visit "/profile/#{ban_page.author.username}"
-    find("a#info-ellipsis").click()
-    page.assert_selector "a[href='/ban/#{ban_page.author.id}'"
   end
 
   test "batch spam nodes" do

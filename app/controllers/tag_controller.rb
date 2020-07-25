@@ -123,7 +123,7 @@ class TagController < ApplicationController
       nodes = nodes.where(created: @start.to_i..@end.to_i)
     else
       @pinned_nodes = NodeShared.pinned_nodes(params[:id])
-      if @pinned_nodes.length > 0 && params[:page].nil? # i.e. first page
+      if @pinned_nodes.size.positive? && params[:page].nil? # i.e. first page
         nodes = nodes.where.not(nid: @pinned_nodes.collect(&:id))
       end
     end
@@ -522,11 +522,12 @@ class TagController < ApplicationController
 
     @all_subscriptions = TagSelection.graph(@start, @end)
 
-    total_questions = Node.published.questions
+    @answers = Node.published.questions
       .where(created: @start.to_i..@end.to_i)
-      .where(nid: Node.find_by_tag(tagname))
-    @answers = total_questions.joins(:comments).size.count
-    @questions = total_questions.size.count
+      .where(nid: Node.find_by_tag(tagname)).joins(:comments).size
+    @questions = Node.published.questions
+      .where(created: @start.to_i..@end.to_i)
+      .where(nid: Node.find_by_tag(tagname)).size
   end
 
   private
